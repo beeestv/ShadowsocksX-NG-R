@@ -330,4 +330,33 @@ func SyncPrivoxy() {
     }
 }
 
+func ApplyConfig() {
+    let defaults = UserDefaults.standard
+    let isOn = defaults.bool(forKey: "ShadowsocksOn")
+    let mode = defaults.string(forKey: "ShadowsocksRunningMode")
+    
+    if isOn {
+        StartSSLocal()
+        StartPrivoxy()
+        if mode == "auto" {
+            ProxyConfHelper.disableProxy("hi")
+            ProxyConfHelper.enablePACProxy("hi")
+        } else if mode == "global" {
+            ProxyConfHelper.disableProxy("hi")
+            ProxyConfHelper.enableGlobalProxy()
+        } else if mode == "manual" {
+            ProxyConfHelper.disableProxy("hi")
+            ProxyConfHelper.disableProxy("hi")
+        } else if mode == "whiteList" {
+            ProxyConfHelper.disableProxy("hi")
+            ProxyConfHelper.enableWhiteListProxy()//新白名单基于GlobalMode
+        }
+    } else {
+        StopSSLocal()
+        StopPrivoxy()
+        ProxyConfHelper.disableProxy("hi")
+    }
+    
+}
+
 // MARK: dependency

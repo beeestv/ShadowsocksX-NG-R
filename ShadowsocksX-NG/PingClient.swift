@@ -106,7 +106,6 @@ class PingServers:NSObject{
         
         task.waitUntilExit()
         let status = task.terminationStatus
-        
         return (output, error, status)
     }
     
@@ -122,11 +121,24 @@ class PingServers:NSObject{
         return latency
     }
     
-    func pingSingleHost(host:String,completionHandler:@escaping (Double?) -> Void){
-        DispatchQueue.global(qos: .userInteractive).async {
-            if let outputString = self.runCommand(cmd: "/sbin/ping", args: "-c","1","-t","1.5",host).output.last{
-                completionHandler(self.getlatencyFromString(result: outputString))
+    func pingSingleHost(host: String, completionHandler:@escaping (String?) -> Void){
+        NSLog("-----> host:\(host)")
+        DispatchQueue.global(qos: .userInteractive).sync {
+            let defaults = UserDefaults.standard
+            let localSocks5Host = defaults.string(forKey: "LocalSocks5.ListenAddress")!
+            let localSocks5Port = defaults.integer(forKey: "LocalSocks5.ListenPort")
+            let begin = NSDate().timeIntervalSince1970*1000
+            if let outputString = self.runCommand(cmd: "/usr/bin/curl", args: "--max-time", "0.2", "--connect-timeout", "0.2", "--socks5", "\(localSocks5Host):\(localSocks5Port)", "http://www.google.com").output.last{
+                let end = NSDate().timeIntervalSince1970*1000
+                if (outputString.count == 0) {
+                    completionHandler("∞")
+                } else {
+                    completionHandler("\(end-begin)")
+                }
             }
+//            if let outputString = self.runCommand(cmd: "/sbin/ping", args: "-c","1","-t","1.5",host).output.last{
+//                completionHandler(self.getlatencyFromString(result: outputString))
+//            }
         }
     }
     
@@ -138,47 +150,49 @@ class PingServers:NSObject{
         
         var result:[(Int,Double)] = []
         
+        let currentProfileId = self.SerMgr.getActiveProfileId()
+        
         for k in 0..<SerMgr.profiles.count {
-            let host = self.SerMgr.profiles[k].serverHost
-            pingSingleHost(host: host, completionHandler: {
+            let profile = self.SerMgr.profiles[k]
+            self.SerMgr.setActiveProfiledId(profile.uuid)
+            SyncSSLocal()
+            pingSingleHost(host: profile.serverHost, completionHandler: {
                 if let latency = $0{
-                    self.SerMgr.profiles[k].latency = String(latency)
-                    
+                    self.SerMgr.profiles[k].latency = latency
                 }
             })
         }
-        //        after two seconds ,time out
-        delay(3){
-            DispatchQueue.main.async {
-                
-                for k in 0..<self.SerMgr.profiles.count {
-                    if let late = self.SerMgr.profiles[k].latency{
-                        if let latency = Double(late){
-                            result.append((k,latency))
-                        }
+        //        after one hundred seconds ,time out
+        DispatchQueue.main.async {
+            
+            for k in 0..<self.SerMgr.profiles.count {
+                if let late = self.SerMgr.profiles[k].latency{
+                    if let latency = Double(late){
+                        result.append((k,latency))
                     }
                 }
-                
-                
-                (NSApplication.shared().delegate as! AppDelegate).updateServersMenu()
-                (NSApplication.shared().delegate as! AppDelegate).updateRunningModeMenu()
-                
-                // do the UI update HERE
-                if let min = result.min(by: {$0.1 < $1.1}){
-                    self.fastest = String(describing: min.1)
-                    self.fastest_id  = min.0
-
-                    let notice = NSUserNotification()
-                    notice.title = "Ping测试完成！"
-                    notice.subtitle = "最快的是\(self.SerMgr.profiles[self.fastest_id].remark) \(self.SerMgr.profiles[self.fastest_id].serverHost) \(self.SerMgr.profiles[self.fastest_id].latency!)ms"
-                    
-                    NSUserNotificationCenter.default.deliver(notice)
-                }
-                
             }
+            
+            
+            (NSApplication.shared().delegate as! AppDelegate).updateServersMenu()
+            (NSApplication.shared().delegate as! AppDelegate).updateRunningModeMenu()
+            
+            // do the UI update HERE
+            if let min = result.min(by: {$0.1 < $1.1}){
+                self.fastest = String(describing: min.1)
+                self.fastest_id  = min.0
+                
+                let notice = NSUserNotification()
+                notice.title = "Ping测试完成！"
+                notice.subtitle = "最快的是\(self.SerMgr.profiles[self.fastest_id].remark) \(self.SerMgr.profiles[self.fastest_id].serverHost) \(self.SerMgr.profiles[self.fastest_id].latency!)ms"
+                
+                NSUserNotificationCenter.default.deliver(notice)
+            }
+            
         }
         
-        
+        self.SerMgr.setActiveProfiledId(currentProfileId)
+        SyncSSLocal()
     }
 }
 

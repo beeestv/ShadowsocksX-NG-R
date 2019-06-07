@@ -111,7 +111,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         notifyCenter.addObserver(forName: NSNotification.Name(rawValue: NOTIFY_ADV_PROXY_CONF_CHANGED), object: nil, queue: nil
             , using: {
             (note) in
-                self.applyConfig()
+                ApplyConfig()
             }
         )
         notifyCenter.addObserver(forName: NSNotification.Name(rawValue: NOTIFY_SERVER_PROFILES_CHANGED), object: nil, queue: nil
@@ -134,14 +134,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             , using: {
             (note) in
                 SyncSSLocal()
-                self.applyConfig()
+                ApplyConfig()
             }
         )
         notifyCenter.addObserver(forName: NSNotification.Name(rawValue: NOTIFY_HTTP_CONF_CHANGED), object: nil, queue: nil
             , using: {
                 (note) in
                 SyncPrivoxy()
-                self.applyConfig()
+                ApplyConfig()
             }
         )
         notifyCenter.addObserver(forName: NSNotification.Name(rawValue: "NOTIFY_FOUND_SS_URL"), object: nil, queue: nil) {
@@ -198,7 +198,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         updateLaunchAtLoginMenu()
         
         ProxyConfHelper.install()
-        applyConfig()
+        ApplyConfig()
 //        SyncSSLocal()
 
         if defaults.bool(forKey: "ConnectAtLaunch") && ServerProfileManager.instance.getActiveProfileId() != "" {
@@ -230,35 +230,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         ProxyConfHelper.stopPACServer()
     }
     
-    func applyConfig() {
-        let defaults = UserDefaults.standard
-        let isOn = defaults.bool(forKey: "ShadowsocksOn")
-        let mode = defaults.string(forKey: "ShadowsocksRunningMode")
-        
-        if isOn {
-            StartSSLocal()
-            StartPrivoxy()
-            if mode == "auto" {
-                ProxyConfHelper.disableProxy("hi")
-                ProxyConfHelper.enablePACProxy("hi")
-            } else if mode == "global" {
-                ProxyConfHelper.disableProxy("hi")
-                ProxyConfHelper.enableGlobalProxy()
-            } else if mode == "manual" {
-                ProxyConfHelper.disableProxy("hi")
-                ProxyConfHelper.disableProxy("hi")
-            } else if mode == "whiteList" {
-                ProxyConfHelper.disableProxy("hi")
-                ProxyConfHelper.enableWhiteListProxy()//新白名单基于GlobalMode
-            }
-        } else {
-            StopSSLocal()
-            StopPrivoxy()
-            ProxyConfHelper.disableProxy("hi")
-        }
-
-    }
-    
     // MARK: Mainmenu functions
     
     @IBAction func toggleRunning(_ sender: NSMenuItem) {
@@ -267,7 +238,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         
         updateMainMenu()
         SyncSSLocal()
-        applyConfig()
+        ApplyConfig()
     }
 
     @IBAction func updateGFWList(_ sender: NSMenuItem) {
@@ -384,7 +355,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         defaults.setValue("", forKey: "ACLFileName")
         updateRunningModeMenu()
         SyncSSLocal()
-        applyConfig()
+        ApplyConfig()
     }
     
     @IBAction func selectGlobalMode(_ sender: NSMenuItem) {
@@ -393,7 +364,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         defaults.setValue("", forKey: "ACLFileName")
         updateRunningModeMenu()
         SyncSSLocal()
-        applyConfig()
+        ApplyConfig()
     }
     
     @IBAction func selectManualMode(_ sender: NSMenuItem) {
@@ -402,7 +373,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         defaults.setValue("", forKey: "ACLFileName")
         updateRunningModeMenu()
         SyncSSLocal()
-        applyConfig()
+        ApplyConfig()
     }
     @IBAction func selectACLAutoMode(_ sender: NSMenuItem) {
         let defaults = UserDefaults.standard
@@ -410,7 +381,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         defaults.setValue("gfwlist.acl", forKey: "ACLFileName")
         updateRunningModeMenu()
         SyncSSLocal()
-        applyConfig()
+        ApplyConfig()
     }
     @IBAction func selectACLBackCHNMode(_ sender: NSMenuItem) {
         let defaults = UserDefaults.standard
@@ -418,7 +389,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         defaults.setValue("backchn.acl", forKey: "ACLFileName")
         updateRunningModeMenu()
         SyncSSLocal()
-        applyConfig()
+        ApplyConfig()
     }
     @IBAction func selectWhiteListMode(_ sender: NSMenuItem) {
         let defaults = UserDefaults.standard
@@ -426,7 +397,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         defaults.setValue("chn.acl", forKey: "ACLFileName")
         updateRunningModeMenu()
         SyncSSLocal()
-        applyConfig()
+        ApplyConfig()
     }
 
     @IBAction func editServerPreferences(_ sender: NSMenuItem) {

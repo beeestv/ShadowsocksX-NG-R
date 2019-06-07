@@ -24,6 +24,34 @@ class ShadowsocksX_NGTests: XCTestCase {
     func testExample() {
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct results.
+        var output : [String] = []
+        var error : [String] = []
+        
+        let task = Process()
+        task.launchPath = "/usr/bin/curl"
+        task.arguments = ["--max-time", "0.2", "--connect-timeout", "0.2", "--socks5", "127.0.0.1:1086", "http://www.google.com"]
+        
+        let outpipe = Pipe()
+        task.standardOutput = outpipe
+        let errpipe = Pipe()
+        task.standardError = errpipe
+        
+        task.launch()
+        
+        let outdata = outpipe.fileHandleForReading.readDataToEndOfFile()
+        if var string = String(data: outdata, encoding: .utf8) {
+            string = string.trimmingCharacters(in: .newlines)
+            output = string.components(separatedBy: "\n")
+        }
+        
+        let errdata = errpipe.fileHandleForReading.readDataToEndOfFile()
+        if var string = String(data: errdata, encoding: .utf8) {
+            string = string.trimmingCharacters(in: .newlines)
+            error = string.components(separatedBy: "\n")
+        }
+        
+        task.waitUntilExit()
+        NSLog("-------> output:\n\(output)")
     }
     
     func testPerformanceExample() {
