@@ -122,7 +122,6 @@ class PingServers:NSObject{
     }
     
     func pingSingleHost(host: String, completionHandler:@escaping (String?) -> Void){
-        NSLog("-----> host:\(host)")
         DispatchQueue.global(qos: .userInteractive).sync {
             let defaults = UserDefaults.standard
             let localSocks5Host = defaults.string(forKey: "LocalSocks5.ListenAddress")!
@@ -135,6 +134,8 @@ class PingServers:NSObject{
                 } else {
                     completionHandler("\(end-begin)")
                 }
+            } else {
+                completionHandler("∞")
             }
 //            if let outputString = self.runCommand(cmd: "/sbin/ping", args: "-c","1","-t","1.5",host).output.last{
 //                completionHandler(self.getlatencyFromString(result: outputString))
@@ -162,7 +163,7 @@ class PingServers:NSObject{
                 }
             })
         }
-        //        after one hundred seconds ,time out
+        
         DispatchQueue.main.async {
             
             for k in 0..<self.SerMgr.profiles.count {
