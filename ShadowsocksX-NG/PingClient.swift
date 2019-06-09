@@ -127,7 +127,7 @@ class PingServers:NSObject{
             let localSocks5Host = defaults.string(forKey: "LocalSocks5.ListenAddress")!
             let localSocks5Port = defaults.integer(forKey: "LocalSocks5.ListenPort")
             let begin = NSDate().timeIntervalSince1970*1000
-            if let outputString = self.runCommand(cmd: "/usr/bin/curl", args: "--max-time", "0.2", "--connect-timeout", "0.2", "--socks5", "\(localSocks5Host):\(localSocks5Port)", "http://www.google.com").output.last{
+            if let outputString = self.runCommand(cmd: "/usr/bin/curl", args: "--connect-timeout", "0.2", "--socks5", "\(localSocks5Host):\(localSocks5Port)", "http://www.google.com").output.last{
                 let end = NSDate().timeIntervalSince1970*1000
                 if (outputString.count == 0) {
                     completionHandler("∞")
